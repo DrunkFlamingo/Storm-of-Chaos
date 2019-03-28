@@ -1,0 +1,4 @@
+--# assume global class STORM_OF_CHAOS
+--# assume global class SOC_BOSS
+--# assume global class SOC_ENCOUNTER
+--# assume global class SOC_LOCATION
