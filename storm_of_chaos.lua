@@ -1,1 +1,0 @@
---this is the main script that will be called for from the required file.
