@@ -306,8 +306,10 @@
 --# assume CM.char_is_mobile_general_with_army: method(char: CA_CHAR) --> boolean
 --model overrides
 --# assume CM.override_building_chain_display: method(building_chain: string, settlement_skin: string)
---stances
+--Puppeteering
 --# assume CM.force_character_force_into_stance: method(lookup: string, stance: string)
+--# assume CM.attack: method(lookup_attacker: string, lookup_defender: string, uses_cq: boolean)
+--# assume CM.move_to: method(lookup: string, x: number, y: number, uses_cqi: boolean)
 
 -- CAMPAIGN UI MANAGER
 --# assume CUIM.get_char_selected: method() --> string
@@ -336,6 +338,7 @@
 --# assume CA_CHAR.display_position_y: method() --> number
 --# assume CA_CHAR.character_subtype_key: method() --> string
 --# assume CA_CHAR.region: method() --> CA_REGION
+--# assume CA_CHAR.has_region: method() --> boolean
 --# assume CA_CHAR.faction: method() --> CA_FACTION
 --# assume CA_CHAR.military_force: method() --> CA_MILITARY_FORCE
 --# assume CA_CHAR.garrison_residence: method() --> CA_GARRISON_RESIDENCE
@@ -695,6 +698,7 @@
 --# assume global random_army_manager: RAM
 --# assume global campaign_cutscene: CA_CUTSCENE
 --# assume global invasion_manager: INVASION_MANAGER
+--# assume global distance_squared: function(number, number, number, number) --> number
 
 --v [require] method(script: string)
 function cm:load_global_script(script)

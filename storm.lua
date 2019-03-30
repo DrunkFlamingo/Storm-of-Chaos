@@ -288,10 +288,120 @@ function storm_of_chaos.init()
     self.encounters = {} --:map<string, SOC_ENCOUNTER>
     self.boss_battles = {} --:map<string, SOC_BOSS>
 
-
     _G.soc = self
 end
 
 cm:load_global_script("soc_lib/Location")
+
+--v function(self: STORM_OF_CHAOS, region_key: string, exits: vector<string>) --> SOC_LOCATION
+function storm_of_chaos.new_region(self, region_key, exits)
+    local new_reg = soc_location.New(self, region_key, exits)
+    self.locations[region_key] = new_reg
+    return new_reg
+end
+
+--v function(self: STORM_OF_CHAOS, region_key: string, character: CA_CHAR)
+function storm_of_chaos.character_enters_location(self, region_key, character)
+    if self.locations[region_key] then
+        self.locations[region_key].is_occupied = true
+        self.locations[region_key].occupant_cqi = character:command_queue_index()
+    end
+end
+
 cm:load_global_script("soc_lib/Encounter")
 
+
+cm:load_global_script("soc_lib/Boss")
+
+--v function(self: STORM_OF_CHAOS,  faction_key: string, spawn_regions: map<number,string>, conquest_rate: number, conquest_path: vector<string>, goal_region: string, hunt_player: boolean, random_move_after_goal: boolean) --> SOC_BOSS
+function storm_of_chaos.new_boss(self, faction_key, spawn_regions, conquest_rate, conquest_path, goal_region, hunt_player, random_move_after_goal)
+    local new_boss = soc_boss.New(self, faction_key, spawn_regions, conquest_rate, conquest_path, goal_region, hunt_player, random_move_after_goal)
+    self.boss_battles[faction_key] = new_boss
+    return new_boss
+end
+
+--TODO OnStageStarted Function
+--[[
+    Calculate boss spawns. 
+    Place bosses.
+    Calculate random encounters.
+    Spawn Encounters. 
+]]
+
+--TODO AI turnstart controller for Bosses
+--v function(self: STORM_OF_CHAOS, character: CA_CHAR)
+function storm_of_chaos.handle_boss_turn(self, character)
+    local boss_battle = self.boss_battles[character:faction():name()]
+    if boss_battle and character:has_region() then
+        local region = character:region()
+        local CurrentLoc = self.locations[region:name()]
+        local nextLoc --:SOC_LOCATION
+        local atFinish = cm:get_saved_value("storm_of_chaos_boss_path_finished_"..character:faction():name().."_"..tostring(self.game_phase)) or false --:boolean
+        local path = boss_battle.conquest_path
+        for i = 1, #path do
+            if atFinish then
+                break
+            end
+            local current_in_path = path[i]
+            local next_in_path = path[i+1]
+            if next_in_path then
+                if current_in_path == region:name() then
+                    nextLoc = self.locations[next_in_path]
+                    break
+                end
+            else
+                if current_in_path == region:name() then
+                    atFinish = true
+                    cm:set_saved_value("storm_of_chaos_boss_path_finished_"..character:faction():name().."_"..tostring(self.game_phase), true)
+                end
+            end
+        end
+        if atFinish then --we are done our objective
+            if boss_battle.random_move_after_goal then
+                local exits = CurrentLoc.exits
+                local random_exit = exits[cm:random_number(#exits)]
+                nextLoc = self.locations[random_exit]
+            elseif boss_battle.hunt_player then
+                local exits = CurrentLoc.exits
+                --FIXME Multiplayer Safety
+                local player = cm:get_faction(cm:get_local_faction()):faction_leader()
+                local player_x, player_y = player:logical_position_x(), player:logical_position_y()
+                local best_exit = 1000 --:number
+                for i = 1, #exits do
+                    local current_in_path = exits[i]
+                    local path_x, path_y = self.locations[current_in_path].x, self.locations[current_in_path].y
+                    if distance_squared(player_x, player_y, path_x, path_y) < best_exit then
+                        best_exit = distance_squared(player_x, player_y, path_x, path_y)
+                        nextLoc = self.locations[current_in_path]
+                    end
+                end
+            end
+        end
+        if nextLoc then
+            --is there an encounter here?
+            if nextLoc:HasOccupant() then
+                if nextLoc:GetOccupant():faction():is_human() then
+                    --attack
+                    cm:force_declare_war(character:faction():name(), nextLoc:GetOccupant():faction():name(), false, false)
+                    cm:attack(cm:char_lookup_str(character), cm:char_lookup_str(nextLoc:GetOccupant()), true)
+                elseif string.find(nextLoc:GetOccupant():faction():name(), "character") and nextLoc:GetOccupant():rank() > character:rank() then
+                   --do nothing, character will wait here for now.
+                else
+                    --occupant is an encounter
+                    --TODO handle boss entering region with encounter 
+                end
+            else --no occupant
+                cm:move_to(cm:char_lookup_str(character), nextLoc.x, nextLoc.y, true)
+            end
+        end
+    end
+end
+--TODO Player UI controller for game
+--[[
+    Check player location
+    Offer up exits
+    check if an occupant exists
+        fight battle if they do
+    move to region otherwise
+    Repeat, offer to "rest"
+]]

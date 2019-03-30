@@ -1,4 +1,4 @@
-local soc_location = {} --# assume soc_location: SOC_LOCATION
+soc_location = {} --# assume global soc_location: SOC_LOCATION
 
 --v function(model: STORM_OF_CHAOS,region_key: string, exits: vector<string>) --> SOC_LOCATION
 function soc_location.New(model,region_key, exits)

@@ -1,7 +1,7 @@
-soc_encounter = {} --# assume soc_encounter: SOC_ENCOUNTER
+soc_encounter = {} --# assume global soc_encounter: SOC_ENCOUNTER
 
 --v function(model: STORM_OF_CHAOS,faction_key: string, starting_army_list: map<number, vector<string>>?, starting_validity: (map<number, function(context: STORM_OF_CHAOS)--> boolean>)?) --> SOC_ENCOUNTER
-function soc_encounter.new_encounter_faction(model, faction_key, starting_army_list, starting_validity)
+function soc_encounter.New(model, faction_key, starting_army_list, starting_validity)
     local self = {}
     setmetatable(self, {
         __index = soc_encounter
