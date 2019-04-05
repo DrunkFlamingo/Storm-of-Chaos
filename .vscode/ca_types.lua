@@ -310,6 +310,7 @@
 --# assume CM.force_character_force_into_stance: method(lookup: string, stance: string)
 --# assume CM.attack: method(lookup_attacker: string, lookup_defender: string, uses_cq: boolean)
 --# assume CM.move_to: method(lookup: string, x: number, y: number, uses_cqi: boolean)
+--# assume CM.disable_movement_for_faction: method(faction_name: string)
 
 -- CAMPAIGN UI MANAGER
 --# assume CUIM.get_char_selected: method() --> string
